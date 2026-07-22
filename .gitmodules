@@ -1,0 +1,6 @@
+[submodule "ros1_ws/src/navigation_msgs"]
+	path = ros1_ws/src/navigation_msgs
+	url = https://github.com/ros-planning/navigation_msgs.git
+[submodule "vendor/camport_ros"]
+	path = vendor/camport_ros
+	url = https://github.com/percipioxyz/camport_ros.git

@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gm461-object-nav-demo"
+version = "0.1.0"
+description = "Safety-gated visible-target short-range local navigation demo"
+requires-python = ">=3.10"
+dependencies = ["PyYAML>=5.4"]
+
+[project.optional-dependencies]
+docs = ["python-docx==1.2.0"]
+vision = [
+  "numpy==1.26.4",
+  "opencv-python==4.10.0.84",
+  "ultralytics==8.4.102",
+  "onnx==1.18.0",
+  "onnxruntime==1.23.2",
+  "open3d==0.19.0",
+  "pytest==9.1.1",
+]
+
+[project.scripts]
+object-nav = "object_nav_demo.cli:main"
+object-nav-ui = "object_nav_demo.command_ui:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

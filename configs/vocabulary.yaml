@@ -1,0 +1,119 @@
+version: "2026.07.21-v1"
+objects:
+  - canonical_label: chair
+    aliases_zh: [椅子, 座椅]
+    prompt_en: chair
+    navigation_mode: approach
+    min_confidence: 0.45
+    min_valid_depth_ratio: 0.55
+    standoff_m: 1.0
+  - canonical_label: table
+    aliases_zh: [桌子, 桌]
+    prompt_en: table
+    navigation_mode: approach
+    min_confidence: 0.50
+    min_valid_depth_ratio: 0.60
+    standoff_m: 1.1
+  - canonical_label: sofa
+    aliases_zh: [沙发]
+    prompt_en: sofa
+    navigation_mode: approach
+    min_confidence: 0.50
+    min_valid_depth_ratio: 0.60
+    standoff_m: 1.2
+  - canonical_label: potted_plant
+    aliases_zh: [盆栽, 绿植]
+    prompt_en: potted plant
+    navigation_mode: approach
+    min_confidence: 0.55
+    min_valid_depth_ratio: 0.60
+  - canonical_label: backpack
+    aliases_zh: [背包, 书包]
+    prompt_en: backpack
+    navigation_mode: approach
+    min_confidence: 0.50
+    min_valid_depth_ratio: 0.60
+  - canonical_label: suitcase
+    aliases_zh: [手提箱, 行李箱]
+    prompt_en: suitcase
+    navigation_mode: approach
+    min_confidence: 0.50
+    min_valid_depth_ratio: 0.60
+  - canonical_label: box
+    aliases_zh: [箱子, 纸箱]
+    prompt_en: cardboard box
+    navigation_mode: approach
+    min_confidence: 0.55
+    min_valid_depth_ratio: 0.65
+  - canonical_label: trash_can
+    aliases_zh: [垃圾桶, 废纸篓]
+    prompt_en: trash can
+    navigation_mode: approach
+    min_confidence: 0.55
+    min_valid_depth_ratio: 0.60
+  - canonical_label: bottle
+    aliases_zh: [瓶子, 水瓶]
+    prompt_en: bottle
+    navigation_mode: detect_only
+    min_confidence: 0.60
+    min_valid_depth_ratio: 0.75
+  - canonical_label: cup
+    aliases_zh: [杯子, 水杯]
+    prompt_en: cup
+    navigation_mode: detect_only
+    min_confidence: 0.60
+    min_valid_depth_ratio: 0.70
+  - canonical_label: book
+    aliases_zh: [书, 书本]
+    prompt_en: book
+    navigation_mode: detect_only
+    min_confidence: 0.55
+    min_valid_depth_ratio: 0.70
+  - canonical_label: laptop
+    aliases_zh: [笔记本电脑, 笔记本]
+    prompt_en: laptop
+    navigation_mode: approach
+    min_confidence: 0.55
+    min_valid_depth_ratio: 0.65
+  - canonical_label: keyboard
+    aliases_zh: [键盘]
+    prompt_en: keyboard
+    navigation_mode: detect_only
+    min_confidence: 0.55
+    min_valid_depth_ratio: 0.70
+  - canonical_label: mouse
+    aliases_zh: [鼠标]
+    prompt_en: computer mouse
+    navigation_mode: detect_only
+    min_confidence: 0.60
+    min_valid_depth_ratio: 0.75
+  - canonical_label: phone
+    aliases_zh: [手机, 电话]
+    prompt_en: cell phone
+    navigation_mode: detect_only
+    min_confidence: 0.60
+    min_valid_depth_ratio: 0.75
+  - canonical_label: clock
+    aliases_zh: [时钟, 钟]
+    prompt_en: clock
+    navigation_mode: detect_only
+    min_confidence: 0.55
+    min_valid_depth_ratio: 0.65
+  - canonical_label: vase
+    aliases_zh: [花瓶]
+    prompt_en: vase
+    navigation_mode: detect_only
+    min_confidence: 0.60
+    min_valid_depth_ratio: 0.75
+  - canonical_label: teddy_bear
+    aliases_zh: [玩具熊, 泰迪熊]
+    prompt_en: teddy bear
+    navigation_mode: detect_only
+    min_confidence: 0.55
+    min_valid_depth_ratio: 0.65
+  - canonical_label: person
+    aliases_zh: [人, 人员, 行人]
+    prompt_en: person
+    navigation_mode: disabled
+    min_confidence: 0.70
+    min_valid_depth_ratio: 0.80

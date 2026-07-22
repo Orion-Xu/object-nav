@@ -1,0 +1,38 @@
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.coverage
+build/
+dist/
+devel/
+install/
+logs/*.jsonl
+data/input/*
+data/output/*
+!data/input/.gitkeep
+!data/output/.gitkeep
+models/
+weights/
+.cache/
+*.pt
+*.onnx
+*.engine
+*.bag
+*.db3
+*.pcd
+*.ply
+.env
+*.pem
+*.key
+
+# 本地实习资料、协议和个人文档不属于项目源码，不上传到远程仓库。
+其他文件/
+推荐论文PDF/
+新版实习计划VLN/
+旧版实习计划/
+
+# 调试时临时保存的网页截图；需要演示图片时请放入 docs/assets/。
+Screenshot *.png

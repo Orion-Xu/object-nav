@@ -1,0 +1,24 @@
+record_version: "2-local-mapless"
+date: null
+responsible_person: null
+ros_distribution: noetic
+evidence_path: null
+topics:
+  odom: {name: null, type: null, frame_id: null, rate_hz: null, confirmed: false}
+  scan: {name: null, type: null, frame_id: null, rate_hz: null, confirmed: false}
+  tf: {name: null, type: null, frame_id: null, rate_hz: null, confirmed: false}
+  rgb: {name: null, type: null, frame_id: null, rate_hz: null, confirmed: false}
+  depth: {name: null, type: null, frame_id: null, rate_hz: null, confirmed: false}
+  camera_info: {name: null, type: null, frame_id: null, rate_hz: null, confirmed: false}
+navigation:
+  global_map_required: false
+  target_frame_required: odom
+  rolling_local_costmap_confirmed: false
+  target_visible_before_motion_required: true
+  interface_type: unknown
+  endpoint: null
+  goal_frame: null
+  cancel_semantics: null
+  stop_semantics: null
+  confirmed: false
+fallback: mock_local_navigation_and_offline_replay

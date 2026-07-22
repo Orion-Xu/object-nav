@@ -1,0 +1,10 @@
+version: "2026.07.21"
+sources:
+  navigation_msgs:
+    url: https://github.com/ros-planning/navigation_msgs.git
+    commit: 18fc8567a6ff86ca3b48370c610b2300c3f561f2
+    note: 官方 ros1 分支；仓库不存在 noetic-devel 分支
+  camport_ros:
+    url: https://github.com/percipioxyz/camport_ros.git
+    commit: f32fa3271486a8aa2eb8a58bd35084c744861a74
+    note: 图漾官方 ROS 1 驱动

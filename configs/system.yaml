@@ -1,0 +1,53 @@
+version: "2026.07.22-local-nav-v1"
+project_scope:
+  mode: visible_target_short_range_local_navigation
+  global_map_required: false
+  target_must_be_visible_before_motion: true
+  maximum_demo_range_m: 8.0
+  coordinate_frame: odom
+detector:
+  preferred_backend: yolo_world
+  preferred_model: YOLOv8s-worldv2
+  preferred_weights: models/yolov8s-worldv2-objectnav.pt
+  device: cuda:0
+  fallback_backend: yolov8n
+  fallback_model: yolov8n
+  fallback_weights: models/yolov8n.onnx
+  fallback_device: cpu
+  fallback_supported: [chair, sofa, potted_plant, backpack, suitcase, bottle, cup, book, laptop, mouse, clock, vase, teddy_bear, person]
+realtime_detection:
+  camera_index: 0
+  image_size: 640
+  confidence: 0.25
+  latest_frame_only: true
+depth:
+  min_m: 0.2
+  max_m: 8.0
+  central_roi_fraction: 0.5
+  max_rgb_depth_delta_s: 0.05
+  max_frame_age_s: 0.5
+search:
+  confirmation_frames: 3
+  max_position_delta_m: 0.25
+  max_frames: 6
+  motion_before_confirmation: false
+navigation:
+  default_standoff_m: 1.0
+  planner_mode: rolling_local_replan
+  global_planner_enabled: false
+  replan_distance_m: 0.4
+  stop_when_target_lost: true
+  mock_step_s: 0.0
+local_mapping:
+  frame_id: base_link
+  width_m: 8.0
+  height_m: 8.0
+  resolution_m: 0.05
+  retention_s: 0.8
+  obstacle_stop_distance_m: 0.5
+  inflation_radius_m: 0.5
+  sources: [depth_pointcloud, laser_scan]
+safety:
+  require_known_estop: true
+  require_odometry: true
+  require_navigation_health: true

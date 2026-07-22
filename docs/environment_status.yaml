@@ -1,0 +1,49 @@
+checked_at: "2026-07-22"
+project_scope:
+  mode: visible_target_short_range_local_navigation
+  global_map_required: false
+  target_must_be_visible_before_motion: true
+host:
+  os: Ubuntu 22.04.5 LTS
+  python: "3.10.12"
+  gpu: NVIDIA GeForce RTX 4060 Laptop GPU
+  driver: "575.57.08"
+  gpu_verified_outside_sandbox: true
+ros:
+  distribution: noetic
+  project_workspace_build: passed
+  move_base_msgs_source: ros-planning/navigation_msgs ros1 branch
+  move_base_adapter_role: optional_odom_local_goal_bridge_only
+vision:
+  environment: .venv
+  torch: 2.11.0+cu128
+  cuda_available: true
+  yolo_world_gpu_smoke_test: passed
+  yolov8n_onnx_cpu_smoke_test: passed
+  clip_cpu_smoke_test: passed
+  open3d_smoke_test: passed
+  model_manifest: models/manifest.json
+  realtime_gui_mode: implemented
+  realtime_sources: [opencv_camera, video_file]
+  realtime_pipeline: latest_frame_only
+  realtime_video_smoke_test: passed
+camera:
+  model: GM461-E1
+  transport: GigE 2.1
+  currently_connected: false
+  official_driver_source_downloaded: true
+  native_build: blocked
+  native_build_reason: Ubuntu 22.04 提供 PCL 1.12，但现有 Focal Noetic pcl_conversions 配置要求 PCL 1.10
+  fallback: docker/camport-noetic/Dockerfile
+  fallback_image_build: passed
+  driver_enumeration: passed_no_device_connected
+safety:
+  robot_ros_master_connected: false
+  cmd_vel_publisher_present: false
+  real_navigation_enabled: false
+verification:
+  pytest: "17 passed, 20 subtests passed"
+  offline_closed_loop: ARRIVED
+  offline_states: [PARSE, LOCAL_SEARCH, TARGET_CONFIRMED, LOCAL_PLAN, APPROACH, ARRIVED]
+  gui_window_confirmed: true
+  gm461_realtime_adapter: pending_physical_camera_and_sdk_or_ros_topic_verification

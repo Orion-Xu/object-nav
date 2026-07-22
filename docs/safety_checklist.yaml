@@ -1,0 +1,18 @@
+record_version: "1"
+date: null
+responsible_person: null
+approval_reference: null
+items:
+  emergency_stop_1: {confirmed: false, evidence: null}
+  emergency_stop_2: {confirmed: false, evidence: null}
+  front_safety_bumper: {confirmed: false, evidence: null}
+  rear_safety_bumper: {confirmed: false, evidence: null}
+  brake: {confirmed: false, evidence: null}
+  manual_takeover: {confirmed: false, evidence: null}
+  audible_visual_alarm: {confirmed: false, evidence: null}
+  laser_obstacle_stop: {confirmed: false, evidence: null}
+  odometry_or_local_tf_loss_stop: {confirmed: false, evidence: null}
+  target_loss_stop: {confirmed: false, evidence: null}
+  local_path_blocked_stop: {confirmed: false, evidence: null}
+motion_approved: false
+blocking_rule: 任一项未确认或无现场批准，不得实机运动
