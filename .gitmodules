@@ -4,3 +4,4 @@
 [submodule "vendor/camport_ros"]
 	path = vendor/camport_ros
 	url = https://github.com/percipioxyz/camport_ros.git
+	ignore = untracked
