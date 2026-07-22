@@ -10,6 +10,8 @@ requires-python = ">=3.10"
 dependencies = ["PyYAML>=5.4"]
 
 [project.optional-dependencies]
+# 自动化测试保持为单独的轻量选项，协作者不需要为了跑测试下载整套视觉模型依赖。
+test = ["pytest==9.1.1"]
 docs = ["python-docx==1.2.0"]
 vision = [
   "numpy==1.26.4",
