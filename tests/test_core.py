@@ -3,17 +3,22 @@ from __future__ import annotations
 import json
 import tempfile
 import time
+import types
 import unittest
 from pathlib import Path
+from unittest.mock import patch
+
+import numpy as np
 
 from object_nav_demo.app_factory import build_offline_demo
+from object_nav_demo.camera_protocol import CameraPacket, PacketRecorder, PacketReplaySource, decode_packet, encode_packet
 from object_nav_demo.command_parser import CommandParser
 from object_nav_demo.config import default_config, load_yaml
-from object_nav_demo.detector import FakeDetector
+from object_nav_demo.detector import FakeDetector, UltralyticsDetector
 from object_nav_demo.frame_source import MockFaults, MockRgbdSource
 from object_nav_demo.goal_builder import build_standoff_goal
-from object_nav_demo.local_mapping import RollingObstacleMap
-from object_nav_demo.models import Detection, LocalizedTarget, NavigationMode, Pose2D, SafetyInputs, TaskState
+from object_nav_demo.local_mapping import RollingObstacleMap, pointcloud_to_obstacles
+from object_nav_demo.models import CameraIntrinsics, Detection, LocalizedTarget, NavigationMode, Pose2D, SafetyInputs, TaskState
 from object_nav_demo.realtime_detection import ConsecutiveLabelConfirmer
 from object_nav_demo.safety_arbiter import SafetyArbiter
 from object_nav_demo.search_manager import SearchManager
@@ -91,6 +96,184 @@ class LocalizerTests(unittest.TestCase):
             with self.subTest(faults=faults, transform=transform.available):
                 self.assertIsNone(self.localize(faults, transform))
 
+    def test_numpy_depth_and_configured_optical_frame_are_supported(self):
+        localizer = TargetLocalizer(
+            0.2, 8.0, 0.5, 0.05, 0.5,
+            clock=lambda: self.now,
+            accepted_camera_frames=("camera_rgb_optical_frame",),
+        )
+        frame = MockRgbdSource(seed=1, clock=lambda: self.now).read()
+        frame = frame.__class__(
+            frame.rgb,
+            np.asarray(frame.depth_m, dtype=np.float32),
+            frame.rgb_timestamp,
+            frame.depth_timestamp,
+            "camera_rgb_optical_frame",
+            frame.intrinsics,
+            frame.received_at,
+        )
+        self.assertIsNotNone(localizer.localize(
+            frame, self.detection, 0.55, StaticTransformProvider()
+        ))
+
+    def test_missing_live_tf_never_produces_local_target(self):
+        localizer = TargetLocalizer(
+            0.2, 8.0, 0.5, 0.05, 0.5,
+            clock=lambda: self.now,
+            accepted_camera_frames=("camera_rgb_optical_frame",),
+        )
+        frame = MockRgbdSource(seed=1, clock=lambda: self.now).read()
+        frame = frame.__class__(
+            frame.rgb,
+            np.asarray(frame.depth_m, dtype=np.float32),
+            frame.rgb_timestamp,
+            frame.depth_timestamp,
+            "camera_rgb_optical_frame",
+            frame.intrinsics,
+            frame.received_at,
+        )
+        self.assertIsNone(localizer.localize(
+            frame, self.detection, 0.55,
+            StaticTransformProvider(available=False),
+        ))
+        self.assertEqual("missing_tf", localizer.last_error)
+
+    def test_invalid_intrinsics_never_produce_target(self):
+        frame = MockRgbdSource(seed=1, clock=lambda: self.now).read()
+        frame = frame.__class__(
+            frame.rgb,
+            frame.depth_m,
+            frame.rgb_timestamp,
+            frame.depth_timestamp,
+            frame.frame_id,
+            CameraIntrinsics(64, 48, 0.0, 60.0, 32.0, 24.0),
+            frame.received_at,
+        )
+        self.assertIsNone(self.localizer.localize(
+            frame, self.detection, 0.55, StaticTransformProvider()
+        ))
+        self.assertEqual("invalid_intrinsics", self.localizer.last_error)
+
+
+class CameraProtocolTests(unittest.TestCase):
+    def packet(self):
+        bgr = np.arange(36, dtype=np.uint8).reshape(3, 4, 3)
+        xyz = np.zeros((3, 4, 3), dtype=np.float32)
+        xyz[:, :, 2] = 2.5
+        return CameraPacket(
+            7, 10.0, 10.01, "camera_rgb_optical_frame",
+            CameraIntrinsics(4, 3, 100.0, 101.0, 1.5, 1.0),
+            bgr, xyz,
+        )
+
+    def test_packet_round_trip_preserves_rgb_depth_and_intrinsics(self):
+        restored = decode_packet(encode_packet(self.packet()))
+        self.assertEqual(7, restored.sequence)
+        self.assertEqual("camera_rgb_optical_frame", restored.frame_id)
+        np.testing.assert_array_equal(self.packet().bgr, restored.bgr)
+        np.testing.assert_allclose(self.packet().xyz_m, restored.xyz_m)
+        self.assertAlmostEqual(2.5, restored.to_rgbd_frame().depth_m[0, 0])
+
+    def test_recording_replays_without_camera(self):
+        with tempfile.TemporaryDirectory() as folder:
+            recording = PacketRecorder(Path(folder) / "sample")
+            recording.write(self.packet())
+            replay = PacketReplaySource(Path(folder) / "sample")
+            self.assertEqual(7, replay.read_packet().sequence)
+            self.assertIsNone(replay.read_packet())
+
+    def test_corrupt_packet_is_rejected(self):
+        with self.assertRaises(ValueError):
+            decode_packet(encode_packet(self.packet())[:-1])
+
+    def test_invalid_packet_metadata_is_rejected(self):
+        packet = self.packet()
+        invalid = CameraPacket(
+            packet.sequence,
+            packet.rgb_timestamp,
+            packet.depth_timestamp,
+            packet.frame_id,
+            CameraIntrinsics(4, 3, 0.0, 101.0, 1.5, 1.0),
+            packet.bgr,
+            packet.xyz_m,
+        )
+        with self.assertRaisesRegex(ValueError, "intrinsics"):
+            encode_packet(invalid)
+
+
+class DetectorAdapterTests(unittest.TestCase):
+    def test_world_prompt_is_mapped_back_to_canonical_label(self):
+        box = types.SimpleNamespace(
+            cls=np.asarray(0),
+            conf=np.asarray(0.9),
+            xyxy=np.asarray([[1.0, 2.0, 3.0, 4.0]]),
+        )
+        result = types.SimpleNamespace(
+            names={0: "potted plant"},
+            boxes=[box],
+        )
+
+        class Model:
+            def set_classes(self, prompts):
+                self.prompts = prompts
+
+            def predict(self, *_args, **_kwargs):
+                return [result]
+
+        model = Model()
+        module = types.SimpleNamespace(
+            YOLO=lambda _path: model,
+            YOLOWorld=lambda _path: model,
+        )
+        with tempfile.TemporaryDirectory() as folder:
+            weights = Path(folder) / "world.pt"
+            weights.touch()
+            with patch.dict("sys.modules", {"ultralytics": module}):
+                detector = UltralyticsDetector(
+                    weights,
+                    {"potted plant": "potted_plant"},
+                )
+                detections = detector.detect(
+                    MockRgbdSource(seed=1).read(), (), "test-vocab"
+                )
+
+        self.assertEqual(["potted plant"], model.prompts)
+        self.assertEqual(frozenset({"potted_plant"}), detector.info.supported_labels)
+        self.assertEqual("potted_plant", detections[0].label)
+
+
+class RollingGridTests(unittest.TestCase):
+    def test_ray_clearing_decay_inflation_and_path_corridor(self):
+        grid = RollingObstacleMap(
+            retention_s=0.8,
+            stop_distance_m=0.5,
+            width_m=4.0,
+            height_m=4.0,
+            resolution_m=0.1,
+            inflation_radius_m=0.2,
+        )
+        grid.update(1.0, [(1.0, 0.0)])
+        self.assertFalse(grid.path_clear(1.0, [(0.0, 0.0), (1.5, 0.0)]))
+        self.assertTrue(grid.path_clear(1.0, [(0.0, 0.8), (1.5, 0.8)]))
+        grid.update(1.1, [(1.5, 0.0)])
+        uninflated = grid.snapshot(1.1, inflated=False)
+        occupied = uninflated.data.count(100)
+        self.assertEqual(1, occupied)
+        self.assertEqual(0, grid.snapshot(2.0).data.count(100))
+
+    def test_window_motion_retains_overlap_and_drops_outside(self):
+        grid = RollingObstacleMap(10.0, 0.2, 2.0, 2.0, 0.1, 0.0)
+        grid.update(1.0, [(0.4, 0.0), (-0.8, 0.0)])
+        grid.move_center((0.5, 0.0))
+        self.assertEqual(1, grid.snapshot(1.0, inflated=False).data.count(100))
+
+    def test_metric_pointcloud_transform_and_height_filter(self):
+        xyz = np.array([[[1.0, 0.0, 0.2], [2.0, 0.0, 2.0]]], dtype=np.float32)
+        points = pointcloud_to_obstacles(
+            xyz, np.eye(4), 0.1, 1.0, min_range_m=0.0, max_range_m=4.0, stride=1
+        )
+        self.assertEqual([(1.0, 0.0)], points)
+
 
 class SearchSafetyNavigationTests(unittest.TestCase):
     def test_realtime_confirmation_resets_on_missing_frame(self):
@@ -109,6 +292,7 @@ class SearchSafetyNavigationTests(unittest.TestCase):
         self.assertTrue(system["project_scope"]["target_must_be_visible_before_motion"])
         self.assertFalse(system["navigation"]["global_planner_enabled"])
         self.assertNotIn("waypoints", system["search"])
+        self.assertFalse(Path(system["camera"]["recording_root"]).is_absolute())
 
     def target(self, label="chair", x=1.0):
         return LocalizedTarget(label, (0, 0, 1), (x, 1, 0), 1.0, 1.0, time.time())

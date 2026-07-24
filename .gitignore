@@ -12,6 +12,7 @@ install/
 logs/*.jsonl
 data/input/*
 data/output/*
+data/recordings/*
 !data/input/.gitkeep
 !data/output/.gitkeep
 models/

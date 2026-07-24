@@ -6,7 +6,11 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
     ros-noetic-cv-bridge ros-noetic-image-transport ros-noetic-pcl-ros \
     ros-noetic-camera-info-manager ros-noetic-dynamic-reconfigure \
     && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    libusb-1.0-0-dev \
+    && rm -rf /var/lib/apt/lists/*
 COPY vendor/camport_ros/src /camera_ws/src
+COPY ros1_ws/src/percipio_object_bridge /camera_ws/src/percipio_object_bridge
 ENV LD_LIBRARY_PATH=/camera_ws/src/percipio_camera/camport4/lib/linux/lib_x64
 RUN source /opt/ros/noetic/setup.bash && catkin_make -C /camera_ws -DCMAKE_BUILD_TYPE=Release
 ENTRYPOINT ["/ros_entrypoint.sh"]

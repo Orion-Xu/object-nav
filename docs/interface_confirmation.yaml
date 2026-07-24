@@ -1,15 +1,15 @@
 record_version: "2-local-mapless"
-date: null
+date: "2026-07-23"
 responsible_person: null
 ros_distribution: noetic
-evidence_path: null
+evidence_path: docs/verification_2026-07-23.md
 topics:
   odom: {name: null, type: null, frame_id: null, rate_hz: null, confirmed: false}
   scan: {name: null, type: null, frame_id: null, rate_hz: null, confirmed: false}
   tf: {name: null, type: null, frame_id: null, rate_hz: null, confirmed: false}
-  rgb: {name: null, type: null, frame_id: null, rate_hz: null, confirmed: false}
-  depth: {name: null, type: null, frame_id: null, rate_hz: null, confirmed: false}
-  camera_info: {name: null, type: null, frame_id: null, rate_hz: null, confirmed: false}
+  rgb: {name: /camera/rgb/image, type: sensor_msgs/Image, frame_id: camera_rgb_optical_frame, rate_hz: 5.14, confirmed: true}
+  depth: {name: /camera/PointCloud2, type: sensor_msgs/PointCloud2, frame_id: camera_rgb_optical_frame, rate_hz: 5.14, confirmed: true}
+  camera_info: {name: /camera/rgb/camera_info, type: sensor_msgs/CameraInfo, frame_id: camera_rgb_optical_frame, rate_hz: 5.14, confirmed: true}
 navigation:
   global_map_required: false
   target_frame_required: odom
