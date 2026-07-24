@@ -8,6 +8,7 @@ import threading
 import time
 
 from .app_factory import build_offline_demo
+from .camera_protocol import PercipioRgbdSource
 from .command_parser import CommandParser
 from .config import default_config
 from .config import PROJECT_ROOT
@@ -47,6 +48,7 @@ class CommandUI:
         ttk.Button(actions, text="运行 Mock 离线闭环", command=self.run_offline).pack(side="left", padx=(0, 8))
         ttk.Button(actions, text="用 YOLO-World 检测图片", command=self.choose_real_image).pack(side="left", padx=(0, 8))
         ttk.Button(actions, text="实时摄像头", command=self.start_camera).pack(side="left", padx=(0, 8))
+        ttk.Button(actions, text="GM461 RGB-D", command=self.start_percipio).pack(side="left", padx=(0, 8))
         ttk.Button(actions, text="实时视频", command=self.choose_video).pack(side="left", padx=(0, 8))
         ttk.Button(actions, text="停止/复位", command=self.stop).pack(side="left")
         model_ready = (PROJECT_ROOT / "models" / "yolov8s-worldv2-objectnav.pt").is_file()
@@ -124,6 +126,9 @@ class CommandUI:
                 import torch
                 from ultralytics import YOLOWorld
                 self._model = YOLOWorld(str(model_path))
+                self._model.set_classes([
+                    policy.prompt_en for policy in self.vocabulary.policies
+                ])
                 self._model_device = 0 if torch.cuda.is_available() else "cpu"
             return self._model, self._model_device
 
@@ -134,6 +139,14 @@ class CommandUI:
         if index is not None:
             self._start_realtime(index, f"摄像头 {index}")
 
+    def start_percipio(self) -> None:
+        settings = self.system.get("camera", {}).get("bridge", {})
+        source = PercipioRgbdSource(
+            str(settings.get("host", "127.0.0.1")),
+            int(settings.get("port", 18765)),
+        )
+        self._start_realtime_source(source, "GM461 RGB-D")
+
     def choose_video(self) -> None:
         path = filedialog.askopenfilename(
             title="选择实时检测视频",
@@ -143,13 +156,15 @@ class CommandUI:
             self._start_realtime(path, Path(path).name)
 
     def _start_realtime(self, source: int | str, source_name: str) -> None:
+        self._start_realtime_source(OpenCvLatestFrameSource(source), source_name)
+
+    def _start_realtime_source(self, capture, source_name: str) -> None:
         model_path = PROJECT_ROOT / "models" / "yolov8s-worldv2-objectnav.pt"
         if not model_path.is_file():
             self.status.set("FAILED | YOLO-World 离线词表权重尚未准备")
             return
         self._stop_realtime(update_status=False)
         try:
-            capture = OpenCvLatestFrameSource(source)
             capture.start()
         except Exception as exc:
             self.status.set(f"FAILED | {exc}")
@@ -167,7 +182,7 @@ class CommandUI:
         )
         self._realtime_thread.start()
 
-    def _realtime_worker(self, capture: OpenCvLatestFrameSource, model_path: Path, source_name: str,
+    def _realtime_worker(self, capture, model_path: Path, source_name: str,
                          stop_event: threading.Event) -> None:
         try:
             model, device = self._load_model(model_path)

@@ -20,6 +20,23 @@ realtime_detection:
   image_size: 640
   confidence: 0.25
   latest_frame_only: true
+camera:
+  device_id: "#1"
+  bridge:
+    host: "127.0.0.1"
+    port: 18765
+  expected_frame_id: camera_rgb_optical_frame
+  recording_root: data/recordings
+  extrinsics:
+    calibrated: false
+    source_frame: camera_rgb_optical_frame
+    target_frame: base_link
+    # Replace after measuring the fixed mount. Identity is never treated as calibrated.
+    camera_to_base_matrix:
+      - [1.0, 0.0, 0.0, 0.0]
+      - [0.0, 1.0, 0.0, 0.0]
+      - [0.0, 0.0, 1.0, 0.0]
+      - [0.0, 0.0, 0.0, 1.0]
 depth:
   min_m: 0.2
   max_m: 8.0
@@ -46,6 +63,9 @@ local_mapping:
   retention_s: 0.8
   obstacle_stop_distance_m: 0.5
   inflation_radius_m: 0.5
+  min_obstacle_height_m: 0.05
+  max_obstacle_height_m: 1.8
+  point_stride: 4
   sources: [depth_pointcloud, laser_scan]
 safety:
   require_known_estop: true

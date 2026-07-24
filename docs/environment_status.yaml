@@ -1,4 +1,4 @@
-checked_at: "2026-07-22"
+checked_at: "2026-07-23"
 project_scope:
   mode: visible_target_short_range_local_navigation
   global_map_required: false
@@ -24,26 +24,37 @@ vision:
   open3d_smoke_test: passed
   model_manifest: models/manifest.json
   realtime_gui_mode: implemented
-  realtime_sources: [opencv_camera, video_file]
+  gui_realtime_sources: [opencv_camera, video_file, gm461_rgbd]
+  cli_replay_sources: [gm461_recording]
   realtime_pipeline: latest_frame_only
   realtime_video_smoke_test: passed
 camera:
   model: GM461-E1
   transport: GigE 2.1
-  currently_connected: false
+  connected_during_check: true
   official_driver_source_downloaded: true
   native_build: blocked
   native_build_reason: Ubuntu 22.04 提供 PCL 1.12，但现有 Focal Noetic pcl_conversions 配置要求 PCL 1.10
   fallback: docker/camport-noetic/Dockerfile
   fallback_image_build: passed
-  driver_enumeration: passed_no_device_connected
+  driver_enumeration: passed_with_gm461
+  rgbd_tcp_bridge: passed
+  measured_resolution: [640, 480]
+  measured_frame_id: camera_rgb_optical_frame
+  measured_driver_rate_hz: 5.14
+  measured_rgb_depth_delta_s: 0.0
+  measured_valid_depth_ratio: 0.66
+  static_extrinsics_calibrated: false
 safety:
   robot_ros_master_connected: false
   cmd_vel_publisher_present: false
   real_navigation_enabled: false
 verification:
-  pytest: "17 passed, 20 subtests passed"
+  pytest: "28 passed, 20 subtests passed"
   offline_closed_loop: ARRIVED
   offline_states: [PARSE, LOCAL_SEARCH, TARGET_CONFIRMED, LOCAL_PLAN, APPROACH, ARRIVED]
   gui_window_confirmed: true
-  gm461_realtime_adapter: pending_physical_camera_and_sdk_or_ros_topic_verification
+  gm461_realtime_adapter: passed_read_only
+  gm461_yolo_world: passed_book_and_chair
+  gm461_recording_replay: passed
+  rolling_grid_camera_frame_diagnostic: passed
